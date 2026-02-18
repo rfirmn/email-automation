@@ -1,0 +1,5 @@
+Halo {{nama}},
+
+Terlampir adalah sertifikat partisipasi Anda.
+
+Terima kasih.
