@@ -1,22 +1,23 @@
+
 # 🎓 Automasi Pengiriman Sertifikat Masal
 
 Aplikasi berbasis web sederhana untuk mengotomatisasi pembuatan dan pengiriman sertifikat menggunakan **Google Slides** dan **Email**.
 
 Dibuat dengan [Streamlit](https://streamlit.io/) dan Python.
 
-## 📋 Abstrak
+## 📋 Fitur Utama
 
-Program ini berfungsi untuk:
 1.  **Menggandakan** template sertifikat dari Google Slides.
 2.  **Mengganti** placeholder nama (misal: `{{nama}}`) dengan nama asli peserta secara otomatis.
 3.  **Mengekspor** slide tersebut menjadi file PDF.
 4.  **Mengirimkan** PDF tersebut ke email peserta sebagai lampiran.
-5.  **Menghapus** file duplikat sementara di Google Drive untuk menjaga kebersihan penyimpanan.
+5.  **Mendukung Akun Pribadi (OAuth)** agar tidak terkendala kuota Service Account.
+6.  **Manajemen Penyimpanan** (khusus Service Account).
 
 ## 🛠️ Persyaratan Sistem
 
 -   Python 3.8 atau lebih baru.
--   Akun Google Cloud Platform (untuk Google Drive & Slides API).
+-   Akun Google (Bisa akun pribadi @gmail.com atau Workspace).
 -   Akun Gmail (untuk pengiriman email via SMTP).
 
 ## 🚀 Cara Instalasi
@@ -29,35 +30,43 @@ Program ini berfungsi untuk:
 
 ## ⚙️ Konfigurasi (PENTING)
 
-Sebelum menjalankan aplikasi, Anda perlu menyiapkan beberapa hal:
+Sebelum menjalankan aplikasi, Anda perlu menyiapkan kredensial Google. Ada dua metode:
 
-### 1. Google Service Account
--   Buka [Google Cloud Console](https://console.cloud.google.com/).
--   Buat Project baru.
--   Aktifkan **Google Drive API** dan **Google Slides API**.
--   Masuk ke "Credentials" -> "Create Credentials" -> "Service Account".
--   Setelah dibuat, masuk ke tab "Keys" dan buat key baru (format **JSON**).
--   Simpan file JSON tersebut (nanti akan diupload ke aplikasi).
+### Opsi A: Menggunakan Akun Pribadi (Disarankan)
+Metode ini menggunakan kuota Google Drive pribadi Anda (15GB).
+1.  Buka [Google Cloud Console](https://console.cloud.google.com/).
+2.  Buat Project baru -> Aktifkan **Google Drive API** dan **Google Slides API**.
+3.  Masuk ke "APIs & Services" -> "OAuth consent screen".
+    -   Pilih **External**.
+    -   Isi info wajib.
+    -   Tambahkan email Anda di bagian **Test Users**.
+4.  Masuk ke "Credentials" -> "Create Credentials" -> "OAuth client ID".
+    -   Application type: **Desktop App**.
+    -   Download file JSON, rename menjadi `client_secret.json` (simpan untuk nanti).
 
-### 2. File `.env` (Kredensial Email)
--   Buat file bernama `.env` di folder root aplikasi (bisa copy dari `.env.example`).
--   Isi dengan data email pengirim Anda:
+### Opsi B: Menggunakan Service Account
+Metode ini untuk use case server-to-server, tapi kuota penyimpanannya terbatas (15GB terpisah dari akun Anda).
+1.  Di Google Cloud Console, buat **Service Account**.
+2.  Buat Key (JSON), rename menjadi `service_account.json`.
+
+---
+
+### Konfigurasi Environment (`.env`)
+1.  Buat file bernama `.env` di folder root aplikasi (bisa copy dari `.env.example`).
+2.  Isi konfigurasi berikut:
     ```env
     EMAIL_SENDER=emailanda@gmail.com
     EMAIL_PASSWORD=password_aplikasi_anda
     EMAIL_SUBJECT=Sertifikat Partisipasi
+    TARGET_FOLDER_ID=ID_FOLDER_GOOGLE_DRIVE_TUJUAN
     ```
-    > **Catatan:** Untuk Gmail, Anda WAJIB menggunakan **App Password** (bukan password login biasa). Aktifkan 2-Step Verification di akun Google Anda, lalu buat App Password di [sini](https://myaccount.google.com/apppasswords).
+    > **Catatan:**
+    > - **App Password:** Untuk Gmail, Anda WAJIB menggunakan **App Password** (bukan password login biasa). [Cara buat App Password](https://myaccount.google.com/apppasswords).
+    > - **Target Folder ID:** ID Folder Google Drive tempat sertifikat akan disimpan. (Ambil ID dari URL folder Drive).
 
-### 3. Isi Email (`email_body.txt`)
+### Isi Email (`email_body.txt`)
 -   Edit file `email_body.txt` untuk mengatur isi pesan email.
--   Gunakan `{{nama}}` jika ingin menyisipkan nama peserta di dalam body email.
-
-### 4. Template Google Slides
--   Buat desain sertifikat di Google Slides.
--   Gunakan teks `{{nama}}` di tempat nama peserta akan muncul.
--   **SHARE** file slide tersebut ke email Service Account (email yang berakhiran `@...iam.gserviceaccount.com` yang ada di dalam file JSON) dengan akses **Editor**.
--   Catat **ID** file slide dari URL (contoh: `docs.google.com/presentation/d/ID_FILE_DISINI/edit`).
+-   Gunakan `{{nama}}` untuk menyisipkan nama peserta.
 
 ## ▶️ Cara Penggunaan
 
@@ -65,19 +74,18 @@ Sebelum menjalankan aplikasi, Anda perlu menyiapkan beberapa hal:
     ```bash
     streamlit run app.py
     ```
-2.  Browser akan terbuka otomatis.
-3.  **Upload** file `service_account.json` pada sidebar.
-4.  Masukkan **ID Google Slides Template** pada sidebar.
-5.  Masukkan daftar peserta di kolom input utama dengan format:
-    ```
-    Nama Peserta 1, email1@domain.com
-    Nama Peserta 2, email2@domain.com
-    ```
-6.  Klik tombol **"Mulai Kirim Sertifikat"**.
-7.  Tunggu proses selesai dan laporan pengiriman akan muncul.
+2.  Di bagian **Konfigurasi** (Sidebar), pilih metode login:
+    -   **OAuth Client ID**: Upload `client_secret.json`. Browser akan terbuka untuk login.
+    -   **Service Account**: Upload `service_account.json`.
+3.  Masukkan **ID Google Slides Template**.
+    -   *Pastikan file Slide sudah Di-SHARE ke akun yang Anda pakai login (sebagai Editor).*
+4.  Masukkan daftar peserta (Nama, Email).
+5.  Klik **"Mulai Kirim Sertifikat"**.
 
 ## ⚠️ Troubleshooting
 
--   **Error Autentikasi**: Pastikan file JSON benar dan API sudah diaktifkan di Google Cloud Console.
--   **Error Permission**: Pastikan file Google Slides sudah di-share ke email Service Account.
--   **Error Email**: Pastikan App Password benar dan koneksi internet stabil.
+-   **Error 404 (File Not Found)**: Akun yang Anda pakai login **tidak punya akses** ke file Template. Buka Google Slides -> Share -> Masukkan email Anda -> Jadikan **Editor**.
+-   **Token Expired/Salah Akun**: Klik tombol **"Logout / Reset Token"** di sidebar, lalu login ulang.
+-   **Storage Penuh (Service Account)**: Gunakan fitur "Cek Kuota & Bersihkan" di sidebar (hanya muncul di mode Service Account).
+
+    ```

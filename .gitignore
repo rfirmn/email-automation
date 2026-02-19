@@ -1,0 +1,18 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables
+.env
+
+# Google Auth Credentials
+service_account.json
+client_secret.json
+token.pickle
+token.json
+credentials.json
+
+# Streamlit
+.streamlit/
